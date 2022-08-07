@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "divoom-gateway.fullname" . }}
+  labels:
+    {{- include "divoom-gateway.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "divoom-gateway.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "divoom-gateway.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "divoom-gateway.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: svcport
+              containerPort: {{ .Values.gateway.serverPort }}
+              protocol: TCP
+          env:
+          - name: DEVICE_ADDRESS
+            value: "{{ .Values.gateway.deviceAddress }}"
+          - name: GATEWAY_ADDRESS
+            value: "{{ .Values.gateway.serverAddress }}"
+          - name: GATEWAY_PORT
+            value: "{{ .Values.gateway.serverPort }}"
+          - name: GATEWAY_EXTRA_ARGS
+            value: "{{ .Values.gateway.extraArgs }}"
+          - name: RUST_LOG
+            value: "{{ .Values.gateway.logConfig }}"
+          livenessProbe:
+            httpGet:
+              path: /probe
+              port: svcport
+          readinessProbe:
+            httpGet:
+              path: /probe
+              port: svcport
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
