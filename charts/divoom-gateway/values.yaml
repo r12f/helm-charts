@@ -8,7 +8,7 @@ image:
   repository: r12f/divoom-gateway
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "0.1.42"
+  tag: "extended-0.1.42"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -29,10 +29,9 @@ podSecurityContext: {}
   # fsGroup: 2000
 
 securityContext:
-  capabilities:
-    readOnlyRootFilesystem: true
-    runAsNonRoot: true
-    runAsUser: 1000
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
 
 service:
   type: ClusterIP
@@ -74,7 +73,7 @@ affinity: {}
 
 gateway:
   # serverAddress is the address that divoom-gateway binds inside the container.
-  serverAddress: 0.0.0.0
+  serverAddress: 127.0.0.1
 
   # serverPort is the tcp port that divoom-gateway binds inside the container.
   serverPort: 20821
